@@ -6,15 +6,15 @@ import sys
 import platform
 import threading
 import numpy as np
-from RobotRaconteurCompanion.Util.InfoFileLoader import InfoFileLoader
-from RobotRaconteurCompanion.Util.DateTimeUtil import DateTimeUtil
-from RobotRaconteurCompanion.Util.SensorDataUtil import SensorDataUtil
-from RobotRaconteurCompanion.Util.AttributesUtil import AttributesUtil
 
 import rpi_ati_net_ft
 
 class ATIDriver(object):
     def __init__(self, host):
+
+        self._lock = threading.RLock()
+        self._recv_lock=threading.RLock()
+        self._steaming = False
         
         self.host = host
         self.ati_obj = rpi_ati_net_ft.NET_FT(host)
@@ -25,11 +25,37 @@ class ATIDriver(object):
         
         self.ati_obj.start_streaming()
     
+    def srv_start_streaming(self):
+        
+        with self._lock:
+            if (self._streaming):
+                raise Exception("Already Streaming")
+            
+            # start data streaming
+            self._streaming = True
+            t = threading.Thread(target=self.stream_loop)
+            t.start()
+
     def stream_loop(self):
+        
+        while self._steaming:
+            if(not self._streaming): return
+            res, ft, status = self.ati_obj.try_read_ft_streaming(.1)
+            self.send_sensor_val(ft)
 
-        res, ft, status = self.ati_obj.try_read_ft_streaming(.1)
+    def send_sensor_val(self, ft):
+        
+        # create the new structure
+        strt = RRN.NewStructure('com.robotraconteur.geometry.Wrench')
+        # pack the data to the structure to send to the client
+        strt.torque.x = ft[0]
+        strt.torque.y = ft[1]
+        strt.torque.z = ft[2]
+        strt.force.x = ft[3]
+        strt.force.y = ft[4]
+        strt.force.z = ft[5]
 
-    
+        self.wrench_sensor_value.Outvalue=strt
 
 def main():
     parser = argparse.ArgumentParser(description="ATI force torque sensor driver service for Robot Raconteur")
@@ -46,7 +72,8 @@ def main():
     with RR.ServerNodeSetup("com.robotraconteur.sensor.WrenchSensor",59823,argv=rr_args):
         
         service_ctx = RRN.RegisterService("ati_sensor","com.robotraconteur.sensor.WrenchSensor",ati_obj)
-        
+        ati_obj.srv_start_streaming()
+
         if args.wait_signal:  
             #Wait for shutdown signal if running in service mode          
             print("Press Ctrl-C to quit...")
