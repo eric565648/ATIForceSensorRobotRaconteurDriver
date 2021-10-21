@@ -6,6 +6,7 @@ import sys
 import platform
 import threading
 import numpy as np
+import time
 
 import rpi_ati_net_ft
 
@@ -24,6 +25,12 @@ class ATIDriver(object):
         print(self.ati_obj.try_read_ft_http())
         
         self.ati_obj.start_streaming()
+
+        # publish rate
+        self.rate = 1e-3
+
+        ## for testing ##
+        self.last_ft = np.zeros(6)
     
     def srv_start_streaming(self):
         
@@ -39,9 +46,14 @@ class ATIDriver(object):
     def stream_loop(self):
         
         while self._streaming:
+            st = time.time()
             if(not self._streaming): return
             res, ft, status = self.ati_obj.try_read_ft_streaming(.1)
             self.send_sensor_val(ft)
+            elapse = time.time()-st
+
+            if self.rate > elapse:
+                time.sleep(self.rate - elapse)
 
     def send_sensor_val(self, ft):
         
@@ -54,9 +66,9 @@ class ATIDriver(object):
         msg_arr[0]['torque']['x'] = ft[0]
         msg_arr[0]['torque']['y'] = ft[1]
         msg_arr[0]['torque']['z'] = ft[2]
-        msg_arr[0]['force']['x'] = ft[2]
-        msg_arr[0]['force']['y'] = ft[2]
-        msg_arr[0]['force']['z'] = ft[2]
+        msg_arr[0]['force']['x'] = ft[3]
+        msg_arr[0]['force']['y'] = ft[4]
+        msg_arr[0]['force']['z'] = ft[5]
         # print(msg_arr)
 
         self.wrench_sensor_value.OutValue=msg_arr

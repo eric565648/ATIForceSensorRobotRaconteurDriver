@@ -2,6 +2,7 @@
 
 
 import sys
+import time
 import rpi_ati_net_ft
 
 def main():
@@ -25,6 +26,7 @@ def main():
             print("res: ", res)
             print("ft: ", ft)
             print("status: ", status)
+            time.sleep(0.5)
         
     except KeyboardInterrupt:
         pass
