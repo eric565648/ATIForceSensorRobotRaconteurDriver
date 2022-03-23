@@ -40,8 +40,11 @@ class ATIDriver(object):
             
             # start data streaming
             self._streaming = True
-            t = threading.Thread(target=self.stream_loop)
-            t.start()
+            self.t = threading.Thread(target=self.stream_loop)
+            self.t.start()
+    def srv_stop_streaming(self):
+        self._streaming = False
+        self.t.join()
 
     def stream_loop(self):
         
@@ -103,6 +106,8 @@ def main():
                 input("Server started, press enter to quit...")
             else:
                 raw_input("Server started, press enter to quit...")
+
+        ati_obj.srv_stop_streaming()
 
 
 if __name__ == "__main__":

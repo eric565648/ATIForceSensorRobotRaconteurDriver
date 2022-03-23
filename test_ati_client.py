@@ -2,7 +2,7 @@
 from RobotRaconteur.Client import *
 import time
 import numpy
-import sys
+import sys, subprocess
 
 def main():
 
@@ -29,15 +29,25 @@ def main():
 def wrench_wire_cb(w,value,time):
     
 
-    print("==============")
-    print("torque.x",value['torque']['x'])
-    print("torque.y",value['torque']['y'])
-    print("torque.z",value['torque']['z'])
-    print("force.x",value['force']['x'])
-    print("force.y",value['force']['y'])
-    print("force.z",value['force']['z'])
-    print("==============")
+    # print("==============")
+    # print("torque.x",value['torque']['x'])
+    # print("torque.y",value['torque']['y'])
+    # print("torque.z",value['torque']['z'])
+    # print("force.x",value['force']['x'])
+    # print("force.y",value['force']['y'])
+    # print("force.z",value['force']['z'])
+    # print("==============")
 
+    statement = """
+    Torque X {}
+    Torque Y {}
+    Torque Z {}
+    Force  X {}
+    Force  Y {}
+    Force  Z {}
+    """.format(value['torque']['x'], value['torque']['y'], value['torque']['z'], value['force']['x'],value['force']['y'],value['force']['z'])
+    subprocess.call('clear')
+    print(statement)
     
 
 if __name__=='__main__':

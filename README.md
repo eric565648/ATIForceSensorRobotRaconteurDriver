@@ -6,6 +6,7 @@ The ATI force torque sensor driver for robot raconteur
 1. [RobotRaconteur](https://github.com/robotraconteur/robotraconteur/wiki/Download)
 2. Python3.8
 3. RobotRaconteur Companion
+4. BeatifulSoup4
 ```
 pip3 install RobotRaconteurCompanion
 ```
